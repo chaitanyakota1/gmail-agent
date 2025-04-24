@@ -26,7 +26,6 @@ if user_id:
             print(user_id)
 
             response_json = resp.json()
-            st.write("DEBUG: response =", response_json)
             if resp.status_code == 200 and "classified_emails" in resp.json():
                 st.session_state.emails = resp.json()["classified_emails"]
                 st.success("Emails fetched and classified successfully.")

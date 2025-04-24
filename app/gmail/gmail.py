@@ -3,11 +3,12 @@ import base64
 import re
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from app.firestore import get_user_tokens
+from app.gmail.secret_manager import get_user_tokens
 from app.config import GOOGLE_SCOPES
 from app.llm_utils import classify_email, generate_reply
 from email.mime.text import MIMEText
 from email.utils import parseaddr
+from datetime import datetime
 
 
 def extract_plain_text(payload):
@@ -88,7 +89,11 @@ def get_gmail_service(user_id: str):
     tokens = get_user_tokens(user_id)
     signature = tokens.get("signature", "Best regards,\n")
     if not tokens:
-        raise Exception("User tokens not found in Firestore.")
+        raise Exception("User tokens not found.")
+    
+    token_expiry = tokens.get("token_expiry")
+    if isinstance(token_expiry, str):
+        token_expiry = datetime.fromisoformat(token_expiry)
 
     creds = Credentials(
         token=tokens["access_token"],
@@ -97,6 +102,7 @@ def get_gmail_service(user_id: str):
         client_id=os.getenv("GOOGLE_CLIENT_ID"),
         client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
         scopes=GOOGLE_SCOPES,
+        expiry=token_expiry
     )
 
     return build("gmail", "v1", credentials=creds)

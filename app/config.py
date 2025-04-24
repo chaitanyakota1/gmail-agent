@@ -9,6 +9,7 @@ GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
 GOOGLE_SCOPES = os.getenv("GOOGLE_SCOPES", "").split(",")
 FIREBASE_CREDENTIALS = os.getenv("FIREBASE_CREDENTIALS", "firebase-key.json")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 
 
 # %%

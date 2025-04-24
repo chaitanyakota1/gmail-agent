@@ -1,63 +1,75 @@
 import streamlit as st
 import requests
+import time
+
+st.set_page_config(page_title="📧 Gmail Assistant (LangGraph)", layout="wide")
+st.title("📧 Gmail LangGraph Assistant (Auto-Send Mode)")
 
 BASE_URL = "http://localhost:8000"
 
-st.set_page_config(page_title="📨 Gmail LangGraph Assistant", layout="wide")
-st.title("📨 Gmail LangGraph Assistant")
-
-# Session state initialization
-if "state" not in st.session_state:
-    st.session_state.state = None
+# --- Session State Initialization ---
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
-if "email_checked" not in st.session_state:
-    st.session_state.email_checked = False
+if "processed_login" not in st.session_state:
+    st.session_state.processed_login = False
 
-# Step 1: Gmail Login
-user_id = st.text_input("Enter your Gmail address:", st.session_state.user_id)
-if user_id:
-    st.session_state.user_id = user_id
+# OAuth Redirect
+query_params = st.experimental_get_query_params()
+if "user_id" in query_params and not st.session_state.processed_login:
+    st.session_state.user_id = query_params["user_id"][0]
+    st.session_state.processed_login = True
+    st.experimental_set_query_params()
 
-    if not st.session_state.email_checked:
-        st.info("🔒 Checking Gmail access...")
-        login_check = requests.get(f"{BASE_URL}/auth/check/{user_id}")
-        if login_check.status_code == 200 and login_check.json().get("authorized"):
-            st.success("✅ Gmail access confirmed.")
-            st.session_state.email_checked = True
+# UI Login
+if not st.session_state.user_id:
+    st.subheader("🔐 Please login to continue")
+    email_input = st.text_input("Enter your Gmail address:")
+    if st.button("Login with Gmail"):
+        if email_input:
+            login_url = f"{BASE_URL}/auth/login?user_id={email_input}"
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={login_url}">', unsafe_allow_html=True)
         else:
-            st.warning("You need to log in with Gmail first.")
-            st.markdown(f"[Click here to log in]({BASE_URL}/auth/login)")
-            st.stop()
+            st.error("Please enter your Gmail address")
+    st.stop()
 
-# Step 2: Start LangGraph agent
-if st.button("Start Gmail Agent"):
-    resp = requests.get(f"{BASE_URL}/agent/run/{st.session_state.user_id}")
-    data = resp.json()
+#Login
+user_id = st.session_state.user_id
+st.success(f"✅ Logged in as: {user_id}")
 
-    if data.get("action") == "pause":
-        st.session_state.state = data["state"]
-        st.success("Reply generated. Please review and approve.")
-    else:
-        st.info("✅ Agent finished or no reply needed.")
+#Actions
+run_col1, run_col2 = st.columns([1, 3])
+with run_col1:
+    run_agent = st.button("▶️ Check for Emails")
 
-# Step 3: Pause state - show review interface
-if st.session_state.state and "current_email" in st.session_state.state:
-    email = st.session_state.state["current_email"]
-    st.markdown(f"**From:** {email['from']}")
-    st.markdown(f"**Subject:** {email['subject']}")
-    edited = st.text_area("Generated Reply:", value=st.session_state.state["reply"], key="edited_reply")
+with run_col2:
+    logout = st.button("🚪 Logout")
+    if logout:
+        st.session_state.clear()
+        st.rerun()
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("✅ Approve and Send"):
-            st.session_state.state["reply"] = edited
-            resume_resp = requests.post(f"{BASE_URL}/agent/resume", json=st.session_state.state)
-            st.session_state.state = None
-            st.success("✅ Reply sent and agent resumed.")
-    with col2:
-        if st.button("❌ Discard"):
-            st.session_state.state["reply"] = ""
-            resume_resp = requests.post(f"{BASE_URL}/agent/resume", json=st.session_state.state)
-            st.session_state.state = None
-            st.info("❌ Reply discarded. Agent resumed.")
+# GMAIL ASSISTANT RUN
+if run_agent:
+    with st.spinner("Running Gmail Assistant (auto-send mode)..."):
+        try:
+            resp = requests.get(f"{BASE_URL}/agent/run/{user_id}")
+            if resp.status_code == 200:
+                data = resp.json()
+                st.success("✅ Assistant finished processing!")
+
+                sent_replies = data.get("sent_replies", [])
+                if sent_replies:
+                    st.subheader("📬 Sent Replies:")
+                    for i, r in enumerate(sent_replies, 1):
+                        st.markdown(f"### ✉️ Reply #{i}")
+                        st.markdown(f"**To:** {r['to']}")
+                        st.markdown(f"**Subject:** {r['subject']}")
+                        st.markdown("**Reply Body:**")
+                        st.code(r["reply"], language="markdown")
+                        st.divider()
+                        time.sleep(0.6)  # Slight delay for streaming effect
+                else:
+                    st.info("No emails required replies.")
+            else:
+                st.error(f"Server error: {resp.status_code}")
+        except Exception as e:
+            st.error(f"Error connecting to server: {e}")

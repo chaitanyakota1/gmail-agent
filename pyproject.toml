@@ -31,4 +31,6 @@ dependencies = [
     "sqlalchemy>=2.0.40",
     "streamlit>=1.44.1",
     "google-cloud-firestore>=2.20.2",
+    "google-cloud-secret-manager>=2.23.3",
+    "redis>=5.2.1",
 ]

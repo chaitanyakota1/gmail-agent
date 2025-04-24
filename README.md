@@ -1,1 +1,1 @@
-# GMAIL ASSISTANT (LLM + LANGGRAPH AGENT + FASTAPI)
+# Gmail Assistant that can be hosted locally and assist you with automated replies

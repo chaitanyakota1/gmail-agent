@@ -1,0 +1,51 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+wheels/
+*.egg
+*.manifest
+*.spec
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+*.env
+*.json
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Pytest cache
+.cache/
+.pytest_cache/
+
+# Logs and local state
+*.log
+*.sqlite3
+*.db
+*.pid
+
+# VSCode, PyCharm & IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS and other hidden files
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*       # like .env.production or .env.dev
+*.pem        # certs/private keys
+.env

@@ -34,18 +34,6 @@ def create_flow():
         redirect_uri=GOOGLE_REDIRECT_URI,
     )
 
-def get_gmail_signature(creds):
-    service = build("gmail", "v1", credentials=creds)
-    results = service.users().settings().sendAs().list(userId="me").execute()
-    send_as_list = results.get("sendAs", [])
-    
-    # Pick the primary send-as address
-    for entry in send_as_list:
-        if entry.get("isPrimary"):
-            return entry.get("signature", "")
-
-    return ""
-
 @router.get("/auth/login")
 async def login(user_id:str = ""):
     flow = create_flow()
@@ -60,7 +48,6 @@ async def login(user_id:str = ""):
 @router.get("/auth/callback")
 async def callback(request: Request):
     flow = create_flow()
-
     try:
         flow.fetch_token(authorization_response=str(request.url))
     except Exception as e:
@@ -83,20 +70,8 @@ async def callback(request: Request):
     except Exception as e:
         logger.error(f" Failed to save tokens for {user_email}: {e}")
         return JSONResponse(status_code=500, content={"error": "Token storage failed."})
-    
-    # # Session block for Redis
-    # try:
-    #     set_user_session(user_email, True)
-    #     logger.info(f"✅ Session set for {user_email}")
-    # except Exception as e:
-    #     logger.error(f" Failed to set session for {user_email}: {e}")
-    #     # still proceed if session fails
-    #     pass
-
-    # Redirect to Streamlit
     return RedirectResponse(f"http://localhost:8501?user_id={user_email}&login=success")
 
-    
 @router.get("/auth/check/{user_id}")
 def check_auth(user_id: str):
     tokens = get_user_tokens(user_id)
@@ -105,3 +80,15 @@ def check_auth(user_id: str):
         if expiry > datetime.utcnow():
             return {"valid": True}
     return {"valid": False}
+
+def get_gmail_signature(creds):
+    service = build("gmail", "v1", credentials=creds)
+    results = service.users().settings().sendAs().list(userId="me").execute()
+    send_as_list = results.get("sendAs", [])
+    
+    # Pick the primary send-as address
+    for entry in send_as_list:
+        if entry.get("isPrimary"):
+            return entry.get("signature", "")
+
+    return ""

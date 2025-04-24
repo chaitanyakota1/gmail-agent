@@ -52,45 +52,6 @@ async def send_email(user_id: str, payload: SendReplyRequest):
         return {"message": "Reply sent", "message_id": result.get("id")}
     except Exception as e:
         return {"error": str(e)}
-    
-# @app.post("/agent/resume")
-# def resume_agent(state: dict):
-#     user_id = state.get("user_id")
-#     if not user_id:
-#         raise HTTPException(status_code=400, detail="Missing user_id in state")
-
-#     result = email_graph_executor.invoke(state)  # 👈 ONLY the `state`, not wrapped in pause dict
-#     # delete_user_session(user_id)
-#     return result
-
-# @app.post("/agent/resume")
-# def resume_agent(state: dict):
-#     try:
-#         command = Command(resume=state)
-#         result = email_graph_executor.invoke(command)
-#         return result
-#     except Exception as e:
-#         return {"error": str(e)}
-
-# @app.post("/agent/resume")
-# def resume_agent(state: Dict):
-#     result = resume_gmail_assistant(state)
-#     return {"message": "Resumed", "result": result}
-    
-
-# @app.get("/agent/run/{user_id}")
-# def run_agent(user_id: str):
-#     initial_state = {
-#         "user_id": user_id,
-#         "stage": "CLASSIFY",
-#         "emails_checked": 0,
-#         # Optional: you can inject Gmail tokens or other context
-#     }
-    
-#     result = run_gmail_assistant(user_id)
-#     if isinstance(result, dict) and result.get("action") == "pause":
-#         set_user_session(user_id, result["state"])
-#     return result
 
 @app.get("/agent/run/{user_id}")
 def run_agent(user_id: str):

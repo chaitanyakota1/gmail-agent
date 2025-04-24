@@ -23,7 +23,7 @@ class State(TypedDict):
 
 def fetch_emails_node(state: dict):
     user_id = state["user_id"]
-    emails = fetch_unread_emails(user_id, max_results=1)
+    emails = fetch_unread_emails(user_id, max_results=5)
     state["emails"] = emails
     state["current_index"] = 0
     return state

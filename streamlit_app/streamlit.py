@@ -4,22 +4,22 @@ import requests
 st.set_page_config(page_title="Gmail Assistant", layout="wide")
 st.title("📬 Gmail Assistant")
 
-# Base URL of your FastAPI backend
+#  FastAPI backend
 BASE_URL = "http://localhost:8000"
 
-# Session state to store user and email data
+# Session state
 if "user_id" not in st.session_state:
     st.session_state.user_id = ""
 if "emails" not in st.session_state:
     st.session_state.emails = []
 
-# Step 1: Enter Email
+# Enter Email
 user_id = st.text_input("Enter your Gmail address:", st.session_state.user_id)
 
 if user_id:
     st.session_state.user_id = user_id
 
-    # Step 2: Attempt to fetch emails
+    # Fetch emails
     if st.button("Fetch and Classify Emails"):
         try:
             resp = requests.get(f"{BASE_URL}/emails/classify/{user_id}")
@@ -36,7 +36,7 @@ if user_id:
         except Exception as e:
             st.error(f"Error: {e}")
 
-# Step 3: Display emails
+# Display emails
 for i, email in enumerate(st.session_state.emails):
     with st.expander(f"✉️ {email['subject']} ({email['classification']})", expanded=True):
         st.markdown(f"**From:** {email['from']}")
@@ -54,8 +54,8 @@ for i, email in enumerate(st.session_state.emails):
             try:
                 send_resp = requests.post(f"{BASE_URL}/emails/send/{user_id}", json=payload)
                 if send_resp.status_code == 200:
-                    st.success("✅ Reply sent successfully!")
+                    st.success("Reply sent successfully!")
                 else:
-                    st.error(f"❌ Failed to send reply: {send_resp.json().get('error')}")
+                    st.error(f"Failed to send reply: {send_resp.json().get('error')}")
             except Exception as e:
-                st.error(f"❌ Error: {e}")
+                st.error(f"Error: {e}")
